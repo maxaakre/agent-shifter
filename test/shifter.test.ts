@@ -127,6 +127,52 @@ describe("createShifter", () => {
     expect(shifter.current()).toBe("2");
   });
 
+  it("announces the model before typing it", async () => {
+    const events: string[] = [];
+    const shifter = createShifter({
+      config: DEFAULT_CONFIG,
+      frontmost: async () => "iTerm2",
+      type: async (text) => {
+        events.push(`type ${text}`);
+      },
+      announce: async (model) => {
+        events.push(`announce ${model}`);
+      },
+    });
+    await shifter.shift("3");
+    expect(events).toEqual(["announce claude-opus-5-5", "type /model claude-opus-5-5"]);
+  });
+
+  it("does not announce when the app is not allowed", async () => {
+    const announced: string[] = [];
+    const shifter = createShifter({
+      config: DEFAULT_CONFIG,
+      frontmost: async () => "Slack",
+      type: async () => {},
+      announce: async (model) => {
+        announced.push(model);
+      },
+    });
+    await shifter.shift("3");
+    expect(announced).toEqual([]);
+  });
+
+  it("still types when the announcement fails", async () => {
+    const typed: string[] = [];
+    const shifter = createShifter({
+      config: DEFAULT_CONFIG,
+      frontmost: async () => "iTerm2",
+      type: async (text) => {
+        typed.push(text);
+      },
+      announce: async () => {
+        throw new Error("disk full");
+      },
+    });
+    expect((await shifter.shift("1")).ok).toBe(true);
+    expect(typed).toEqual(["/model claude-haiku-4-5-20251001"]);
+  });
+
   it("starts from initialGear when given", () => {
     const shifter = createShifter({
       config: DEFAULT_CONFIG,

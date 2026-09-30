@@ -23,6 +23,23 @@ npm start
 
 A `⚙` appears in the menu bar. It shows the last gear you shifted to.
 
+## Skip the "switch model?" question (recommended)
+
+While a conversation is fresh, Claude Code asks you to confirm a model switch. That would stop the shifter halfway.
+
+Install a small hook once:
+
+```bash
+npm run install-hook
+```
+
+- It adds a `PreModelSwitch` hook to `~/.claude/settings.json`, and keeps a backup at `settings.json.bak`.
+- It **only** skips the question for switches the shifter made. When you type `/model` yourself, you still get asked.
+- To remove it: `npm run uninstall-hook`.
+- The hook runs `dist/allow-hook.js`, so keep the project built (`npm start` builds it).
+
+**Why Claude Code asks:** each model has its own prompt cache. After a switch, the next request re-reads the whole conversation without the cache, which costs more in long sessions.
+
 ## Turn it on and off
 
 - Click **Shifter on** in the menu, or press `⌃⌥0`.
@@ -37,8 +54,9 @@ A `⚙` appears in the menu bar. It shows the last gear you shifted to.
 3. If it is not an allowed terminal (iTerm2, Terminal, nodeterm), it stops and shows "Not a terminal".
 4. It **waits until you let go** of ⌃⌥, so the typed keys are not read as shortcuts.
 5. It **checks the focused app again**, in case focus moved while waiting.
-6. It types `/model claude-sonnet-5-5` and presses Return, like you typed it yourself.
-7. The menu bar updates to `⚙ 2`.
+6. It leaves a short note (`~/.config/agent-shifter/pending.json`) so the hook knows this switch is ours.
+7. It types `/model claude-sonnet-5-5` and presses Return, like you typed it yourself.
+8. The menu bar updates to `⚙ 2`.
 
 Under the hood:
 
@@ -56,6 +74,9 @@ Under the hood:
 | `src/hotkeys.ts` | Registers the hotkeys |
 | `src/config.ts` | Loads and checks the config file |
 | `src/messages.ts` | Turns errors into notification text |
+| `src/pending.ts` | The short-lived "this switch is ours" note |
+| `src/allow-hook.ts` | The `PreModelSwitch` hook that skips the question |
+| `src/install-hook.ts` | Adds/removes the hook in `~/.claude/settings.json` |
 
 ## Permissions
 
@@ -82,3 +103,4 @@ npm test
 
 - Shift with an empty input line. Text already typed gets `/model …` added to it.
 - If you run `/model` yourself, the menu bar gear will not know.
+- `/model <id>` also becomes your default model for new Claude Code sessions.

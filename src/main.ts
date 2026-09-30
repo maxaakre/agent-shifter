@@ -4,6 +4,7 @@ import { createFrontmost } from "./frontmost";
 import { Config } from "./gears";
 import { gearAccelerators, registerGearHotkeys, toggleAccelerator } from "./hotkeys";
 import { describeResult } from "./messages";
+import { writePending } from "./pending";
 import { Shifter, createShifter } from "./shifter";
 import { Toggle, createToggle } from "./toggle";
 import { createTyper } from "./typer";
@@ -87,6 +88,7 @@ async function setup(): Promise<void> {
     config,
     frontmost: createFrontmost(),
     type: createTyper(),
+    announce: (model) => writePending(model),
     initialGear: previous && config.gears[previous] ? previous : null,
   });
 

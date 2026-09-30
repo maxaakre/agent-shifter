@@ -10,6 +10,8 @@ export interface ShifterDeps {
   frontmost: () => Promise<string>;
   type: (text: string, allowedApps: string[]) => Promise<void>;
   initialGear?: string | null;
+  // Tells the PreModelSwitch hook this switch is ours, so it can skip the confirmation.
+  announce?: (model: string) => Promise<void>;
 }
 
 export interface Shifter {
@@ -32,6 +34,8 @@ export function createShifter(deps: ShifterDeps): Shifter {
       if (!deps.config.allowedApps.includes(app)) {
         return { ok: false, reason: "not-allowed", detail: app };
       }
+      // Best effort: without the note, Claude Code just asks to confirm as usual.
+      await deps.announce?.(model).catch(() => {});
       await deps.type(`/model ${model}`, deps.config.allowedApps);
       current = gear;
       return { ok: true, gear, model };
