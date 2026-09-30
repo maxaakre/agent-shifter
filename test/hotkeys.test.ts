@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { registerGearHotkeys } from "../src/hotkeys";
+import { gearAccelerators, registerGearHotkeys, toggleAccelerator } from "../src/hotkeys";
 
 describe("registerGearHotkeys", () => {
   it("registers <prefix>+<gear> for each gear, in order, and wires callbacks", () => {
@@ -35,5 +35,17 @@ describe("registerGearHotkeys", () => {
     );
     expect(failed).toEqual(["Control+Alt+1", "Control+Alt+2"]);
     expect(registered).toEqual(["Control+Alt+3"]);
+  });
+});
+
+describe("gearAccelerators", () => {
+  it("lists <prefix>+<gear> in gear order", () => {
+    expect(gearAccelerators({ "2": "b", "1": "a" }, "Control+Alt")).toEqual(["Control+Alt+1", "Control+Alt+2"]);
+  });
+});
+
+describe("toggleAccelerator", () => {
+  it("is <prefix>+0", () => {
+    expect(toggleAccelerator("Control+Alt")).toBe("Control+Alt+0");
   });
 });

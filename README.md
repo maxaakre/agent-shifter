@@ -12,6 +12,7 @@ Press a hotkey in a Claude Code session and it types `/model <id>` for you.
 | `⌃⌥2` | 2 | `claude-sonnet-5-5` |
 | `⌃⌥3` | 3 | `claude-opus-5-5` |
 | `⌃⌥4` | 4 | `claude-fable-5-1` |
+| `⌃⌥0` | — | Turn the shifter on / off |
 
 ## Run
 
@@ -21,6 +22,40 @@ npm start
 ```
 
 A `⚙` appears in the menu bar. It shows the last gear you shifted to.
+
+## Turn it on and off
+
+- Click **Shifter on** in the menu, or press `⌃⌥0`.
+- When off, the menu bar shows `⚙ off` and the gear hotkeys are released, so other apps can use them.
+- `⌃⌥0` still works while off, so you can turn it back on.
+- It starts **on** each time you launch it.
+
+## How it works
+
+1. You press a gear hotkey, e.g. `⌃⌥2`.
+2. The app asks macOS which app is **focused**.
+3. If it is not an allowed terminal (iTerm2, Terminal, nodeterm), it stops and shows "Not a terminal".
+4. It **waits until you let go** of ⌃⌥, so the typed keys are not read as shortcuts.
+5. It **checks the focused app again**, in case focus moved while waiting.
+6. It types `/model claude-sonnet-5-5` and presses Return, like you typed it yourself.
+7. The menu bar updates to `⚙ 2`.
+
+Under the hood:
+
+- **Electron** gives the menu bar icon and the global hotkeys.
+- **`osascript`** (macOS scripting) finds the focused app and sends the keystrokes through System Events. That is why it needs Accessibility access.
+- The app never talks to Claude Code directly. It only types, so it works in any terminal on the allowed list.
+
+| File | Job |
+|------|-----|
+| `src/main.ts` | Menu bar, hotkeys, notifications |
+| `src/shifter.ts` | Decides whether to shift, then types the command |
+| `src/typer.ts` | The keystroke script (waits for keys, re-checks focus) |
+| `src/frontmost.ts` | Finds the focused app |
+| `src/toggle.ts` | On/off state |
+| `src/hotkeys.ts` | Registers the hotkeys |
+| `src/config.ts` | Loads and checks the config file |
+| `src/messages.ts` | Turns errors into notification text |
 
 ## Permissions
 
@@ -34,8 +69,14 @@ The first shift needs **Accessibility** access.
 Edit `~/.config/agent-shifter/config.json`, then click **Reload config** in the menu.
 
 - `gears`: digit `1`–`9` → model id.
-- `hotkeyPrefix`: Electron accelerator prefix, default `Control+Alt`.
+- `hotkeyPrefix`: Electron accelerator prefix, default `Control+Alt`. The toggle is `<prefix>+0`.
 - `allowedApps`: exact app process names that may receive typing.
+
+## Test
+
+```bash
+npm test
+```
 
 ## Limits
 
