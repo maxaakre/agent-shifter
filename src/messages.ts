@@ -2,7 +2,7 @@ import { ShiftResult } from "./shifter";
 import { MODIFIERS_HELD_MESSAGE } from "./typer";
 
 // osascript errors seen when the app lacks Accessibility permission.
-const NO_ACCESS = /assistive|-1719|-25211/i;
+const NO_ACCESS = /assistive|not allowed to send keystrokes|\(1002\)|-1719|-1743|-25211/i;
 
 export function describeResult(result: ShiftResult): string | null {
   if (result.ok) return null;

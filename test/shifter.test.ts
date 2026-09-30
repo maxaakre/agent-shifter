@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_CONFIG } from "../src/gears";
 import { createShifter } from "../src/shifter";
+import { FocusChangedError } from "../src/typer";
 
 function setup(app = "iTerm2") {
   const typed: string[] = [];
@@ -98,6 +99,32 @@ describe("createShifter", () => {
     await vi.waitFor(() => expect(typed).toHaveLength(2));
     release();
     expect((await again).ok).toBe(true);
+  });
+
+  it("passes the allowed apps to the typer", async () => {
+    let seen: string[] | undefined;
+    const shifter = createShifter({
+      config: DEFAULT_CONFIG,
+      frontmost: async () => "iTerm2",
+      type: async (_text, allowedApps) => {
+        seen = allowedApps;
+      },
+    });
+    await shifter.shift("1");
+    expect(seen).toEqual(DEFAULT_CONFIG.allowedApps);
+  });
+
+  it("reports not-allowed and keeps the old gear when focus moves during typing", async () => {
+    const shifter = createShifter({
+      config: DEFAULT_CONFIG,
+      frontmost: async () => "iTerm2",
+      type: async () => {
+        throw new FocusChangedError("Slack");
+      },
+      initialGear: "2",
+    });
+    expect(await shifter.shift("3")).toEqual({ ok: false, reason: "not-allowed", detail: "Slack" });
+    expect(shifter.current()).toBe("2");
   });
 
   it("starts from initialGear when given", () => {

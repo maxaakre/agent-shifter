@@ -19,7 +19,13 @@ describe("describeResult", () => {
   });
 
   it("explains how to grant Accessibility access", () => {
-    for (const detail of ["osascript is not allowed assistive access", "execution error (-1719)", "(-25211)"]) {
+    for (const detail of [
+      "osascript is not allowed assistive access",
+      "execution error (-1719)",
+      "(-25211)",
+      "System Events got an error: osascript is not allowed to send keystrokes. (1002)",
+      "Not authorized to send Apple events to System Events. (-1743)",
+    ]) {
       expect(describeResult({ ok: false, reason: "error", detail })).toBe(
         "Grant Accessibility access: System Settings → Privacy & Security → Accessibility",
       );

@@ -1,4 +1,5 @@
 import { Config } from "./gears";
+import { FocusChangedError } from "./typer";
 
 export type ShiftResult =
   | { ok: true; gear: string; model: string }
@@ -7,7 +8,7 @@ export type ShiftResult =
 export interface ShifterDeps {
   config: Config;
   frontmost: () => Promise<string>;
-  type: (text: string) => Promise<void>;
+  type: (text: string, allowedApps: string[]) => Promise<void>;
   initialGear?: string | null;
 }
 
@@ -31,10 +32,11 @@ export function createShifter(deps: ShifterDeps): Shifter {
       if (!deps.config.allowedApps.includes(app)) {
         return { ok: false, reason: "not-allowed", detail: app };
       }
-      await deps.type(`/model ${model}`);
+      await deps.type(`/model ${model}`, deps.config.allowedApps);
       current = gear;
       return { ok: true, gear, model };
     } catch (err) {
+      if (err instanceof FocusChangedError) return { ok: false, reason: "not-allowed", detail: err.app };
       return { ok: false, reason: "error", detail: err instanceof Error ? err.message : String(err) };
     } finally {
       busy = false;
